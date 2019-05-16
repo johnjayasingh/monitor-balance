@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema(
 
 const User = mongoose.model("GlobalPayUsers", UserSchema);
 
-User.find().lean().limit(10).select('-_id userId email phone').then(async dbResult => {
+User.find().lean().limit(Number(process.env.LIMIT) || 1).select('-_id userId email phone').then(async dbResult => {
     const promise = []
     dbResult.forEach(data => {
         promise.push(mnemonic.getAccountCredentials(data.userId).then(result => ({ Ethereum: result.ETH.publicKey, 'Ethereum Balance': result.ETH.balance, Bitcoin: result.BTC.publicKey, 'Bitcoin Balance': result.BTC.balance, ...data })))
