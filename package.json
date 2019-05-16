@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.18.0",
     "bip32": "^2.0.2",
     "bip39": "^3.0.2",
     "bitcoinjs-lib": "^5.0.3",
@@ -19,6 +20,7 @@
     "express": "^4.16.4",
     "json2csv": "^4.5.1",
     "mongoose": "^5.5.8",
-    "nodemon": "^1.19.0"
+    "nodemon": "^1.19.0",
+    "web3": "^1.0.0-beta.55"
   }
 }
