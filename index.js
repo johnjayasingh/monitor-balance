@@ -22,7 +22,8 @@ const outputFile = path.resolve(__dirname, `output_${new Date().toUTCString()}.c
 User.find().lean().skip(Number(process.env.SKIP)).limit(Number(process.env.LIMIT) || 1).select('-_id userId email phone').then(async dbResult => {
     let result;
     const resolvedAddress = []
-    dbResult.forEach(async data => {
+    let progress = 0
+    dbResult.forEach(async (data, index) => {
         const resultData = await mnemonic
             .getAccountCredentials(data.userId)
             .then(result => ({
@@ -41,7 +42,8 @@ User.find().lean().skip(Number(process.env.SKIP)).limit(Number(process.env.LIMIT
             }))
         resolvedAddress.push(resultData)
         result = json2csv.parse(resolvedAddress)
-        await delay(3000)
+        // console.log(`Progress ${(((++progress * Number(process.env.LIMIT || 1))) / 100)}`)
+        await delay(Number(process.env.DELAY || 3000))
         try {
             fs.writeFileSync(outputFile, result)
         } catch (error) {
