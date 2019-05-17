@@ -17,6 +17,7 @@ const UserSchema = new mongoose.Schema(
 
 const User = mongoose.model("GlobalPayUsers", UserSchema);
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const outputFile = path.resolve(__dirname, `output_${new Date().toUTCString()}.csv`);
 
 User.find().lean().skip(Number(process.env.SKIP)).limit(Number(process.env.LIMIT) || 1).select('-_id userId email phone').then(async dbResult => {
     let result;
@@ -31,12 +32,18 @@ User.find().lean().skip(Number(process.env.SKIP)).limit(Number(process.env.LIMIT
                 'Bitcoin Balance': result.BTC.balance,
                 ...data
             }))
-            .catch(console.error)
-        await delay(3000)
+            .catch(err => ({
+                Ethereum: result && result.ETH && result.ETH.publicKey,
+                'Ethereum Balance': result && result.ETH && result.ETH.balance,
+                Bitcoin: result && result.BTC && result.BTC.publicKey,
+                'Bitcoin Balance': result && result.BTC && result.BTC.balance,
+                ...data
+            }))
         resolvedAddress.push(resultData)
         result = json2csv.parse(resolvedAddress)
+        await delay(3000)
         try {
-            fs.writeFileSync(path.resolve(__dirname, `output_${new Date().toUTCString()}.csv`), result)
+            fs.writeFileSync(outputFile, result)
         } catch (error) {
             console.error(error)
             process.exit()

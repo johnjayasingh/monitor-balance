@@ -23,7 +23,9 @@ const convertToBitcoin = async (network, path) => {
         network,
         privateKey: wif
     });
-    const balance = await Axios.get(`${constants.BITCOIN_API}/addr/${address}`);
+    const balance = await Axios.get(`${constants.BITCOIN_API}/addr/${address}`).catch((err) => {
+        return { data: { balance: err.message } }
+    })
     return {
         publicKey: address,
         balance: balance.data.balance,
@@ -50,7 +52,7 @@ exports.getAccountCredentials = async (index = 0) => {
             // Network
             Bitcoin.networks.bitcoin,
             `${constants.BTC_PATH}/${index}`
-        );
+        )
         const ETH = await convertToEthereum(`${constants.ETH_PATH}/${index}`);
         resolve({
             BTC,
