@@ -16,19 +16,30 @@ const UserSchema = new mongoose.Schema(
 
 
 const User = mongoose.model("GlobalPayUsers", UserSchema);
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 User.find().lean().skip(Number(process.env.SKIP)).limit(Number(process.env.LIMIT) || 1).select('-_id userId email phone').then(async dbResult => {
-    const promise = []
-    dbResult.forEach(data => {
-        promise.push(mnemonic.getAccountCredentials(data.userId).then(result => ({ Ethereum: result.ETH.publicKey, 'Ethereum Balance': result.ETH.balance, Bitcoin: result.BTC.publicKey, 'Bitcoin Balance': result.BTC.balance, ...data })))
+    let result;
+    const resolvedAddress = []
+    dbResult.forEach(async data => {
+        const resultData = await mnemonic
+            .getAccountCredentials(data.userId)
+            .then(result => ({
+                Ethereum: result.ETH.publicKey,
+                'Ethereum Balance': result.ETH.balance,
+                Bitcoin: result.BTC.publicKey,
+                'Bitcoin Balance': result.BTC.balance,
+                ...data
+            }))
+            .catch(console.error)
+        await delay(3000)
+        resolvedAddress.push(resultData)
+        result = json2csv.parse(resolvedAddress)
+        try {
+            fs.writeFileSync(path.resolve(__dirname, `output_${new Date().toUTCString()}.csv`), result)
+        } catch (error) {
+            console.error(error)
+            process.exit()
+        }
     })
-    const resolvedAddress = await Promise.all(promise).catch(console.error)
-    const result = json2csv.parse(resolvedAddress)
-    try {
-        fs.writeFileSync(path.resolve(__dirname, `output_${new Date().toUTCString()}.csv`), result)
-    } catch (error) {
-        process.exit(0)
-    }
-    console.log(result)
-    process.exit()
 })
